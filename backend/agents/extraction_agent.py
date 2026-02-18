@@ -4,10 +4,12 @@ Implements intelligent claim detection with context awareness.
 """
 import logging
 from typing import List, Dict, Optional, Callable, Any
+import asyncio
 import json
 import re
 
 from utils.vertex_client import vertex_client
+from core.thinking_refiner import ThinkingRefiner
 
 logger = logging.getLogger(__name__)
 
@@ -18,11 +20,20 @@ class ExtractionAgent:
     def __init__(self):
         self.vertex_client = vertex_client
     
-    async def extract_claims(self, text: str, progress_callback: Optional[Callable] = None) -> List[Dict[str, Any]]:
+    async def extract_claims(self, text: str, session_id: str = "default", progress_callback: Optional[Callable] = None) -> List[Dict[str, Any]]:
         """
         Extract verifiable factual claims from text.
         """
         logger.info(f"Extracting claims from text ({len(text)} chars)")
+        
+        # Initialize Thinking Refiner for professional updates
+        refiner = None
+        if progress_callback:
+            refiner = ThinkingRefiner(
+                session_id=session_id,
+                claim_id="extraction_thinking", # Virtual ID for the extraction phase
+                progress_callback=progress_callback
+            )
         
         prompt = f"""You are a professional fact-checker. Analyze the following article and extract EVERY individual verifiable factual claim.
 
@@ -63,15 +74,19 @@ IMPORTANT:
             ):
                 if chunk['type'] == 'thought':
                     all_thoughts += chunk['text']
-                    if progress_callback:
-                        await progress_callback({
-                            "claim_id": "extraction_thinking",
-                            "phase": "Extracting Facts",
-                            "message": chunk['text'],
-                            "is_native_thought": True
-                        })
+                    # Route thoughts through refiner if available
+                    if refiner:
+                        await refiner.add_raw_thought(chunk['text'])
+                    # Fallback logic removed: frontend filters native thoughts anyway
+                    
                 if chunk['type'] == 'text':
                     full_text += chunk['text']
+            
+            # Flush refiner at end (Non-blocking)
+            if refiner:
+                 # Non-blocking flush ensures claims are returned immediately.
+                 # Frontend waits for "is_streaming_complete" signal from the refiner.
+                 asyncio.create_task(refiner.flush())
             
             # Combine text and thoughts for extraction search if text is empty
             # Sometimes models put the results in the wrong part

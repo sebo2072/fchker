@@ -21,7 +21,9 @@ class VerificationAgent:
         self,
         claim: Dict,
         session_id: str,
-        progress_callback: Optional[Callable] = None
+        progress_callback: Optional[Callable] = None,
+        task_index: Optional[int] = None,
+        total_tasks: Optional[int] = None
     ) -> Dict:
         """
         Verify a factual claim using Gemini with Google Search grounding.
@@ -48,10 +50,18 @@ class VerificationAgent:
         
         # Send initial status
         if progress_callback:
+            message = "Initializing verification parameters..."
+            if task_index is not None:
+                # Determine ordinal suffix (1st, 2nd, 3rd, 4th...)
+                suffix = "th"
+                if not 11 <= (task_index % 100) <= 13:
+                    suffix = {1: "st", 2: "nd", 3: "rd"}.get(task_index % 10, "th")
+                message = f"Starting up with the {task_index}{suffix} verification task."
+                
             await progress_callback({
                 "claim_id": claim_id,
                 "phase": "ANALYZING",
-                "message": "Initializing verification parameters..."
+                "message": message
             })
         
         prompt = f"""You are a professional fact-checker. Verify the following claim using real-time information from Google Search.

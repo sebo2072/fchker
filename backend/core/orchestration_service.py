@@ -80,7 +80,11 @@ class OrchestrationService:
                 await self.connection_manager.broadcast_thinking_update(session_id, update)
                 
             # Extract claims from the CURRENT chunk
-            claims = await self.extraction_agent.extract_claims(current_chunk_text, progress_callback)
+            claims = await self.extraction_agent.extract_claims(
+                text=current_chunk_text, 
+                session_id=session_id,
+                progress_callback=progress_callback
+            )
             
             # Store in session
             session.extracted_claims = claims
@@ -171,7 +175,13 @@ class OrchestrationService:
                     await asyncio.sleep(1.5)
                 try:
                     logger.info(f"Session {session_id}: Starting verification {i+1}/{len(confirmed_claims)}")
-                    result = await self.verification_agent.verify_claim(claim, session_id, progress_callback)
+                    result = await self.verification_agent.verify_claim(
+                        claim, 
+                        session_id, 
+                        progress_callback,
+                        task_index=i+1,
+                        total_tasks=len(confirmed_claims)
+                    )
                     results.append(result)
                     
                     # Update session in-memory list

@@ -30,6 +30,7 @@ class ThinkingRefiner:
         async with self.lock:
             self.buffer += text
             
+            # Check if we should trigger refinement (500+ chars)
             if len(self.buffer) >= self.buffer_limit and not self.is_refining:
                 # Trigger background refinement without blocking the primary stream
                 task = asyncio.create_task(self._trigger_refinement())
@@ -39,7 +40,8 @@ class ThinkingRefiner:
         """Final refinement of remaining buffer and wait for tasks."""
         async with self.lock:
             if self.buffer:
-                await self._trigger_refinement()
+                # For flush, we process whatever is left
+                await self._trigger_refinement(force=True)
             
             # Wait for any pending background tasks
             if self.refinement_tasks:
@@ -47,16 +49,49 @@ class ThinkingRefiner:
                 if pending:
                     await asyncio.wait(pending, timeout=10) # 10s safety timeout
 
-    async def _trigger_refinement(self):
+    async def _trigger_refinement(self, force: bool = False):
         """Send buffer to fast agent for streaming narrative refinement."""
         if not self.buffer:
             return
+
+        to_refine = ""
+        
+        if force:
+            # Take everything
+            to_refine = self.buffer
+            self.buffer = ""
+        else:
+            # Intelligent chunking: find last sentence boundary
+            # Look for . ! ? followed by space or end of string
+            # We want the *last* valid split point to maximize chunk size
+            # but keep it roughly within reason
+            
+            # Regex for sentence ending: [.!?] followed by whitespace
+            import re
+            
+            # Search for sentence endings
+            # We simply want to cut at the last punctuation mark that makes sense
+            matches = list(re.finditer(r'[.!?]\s', self.buffer))
+            
+            if matches:
+                last_match = matches[-1]
+                cut_index = last_match.end()
+                to_refine = self.buffer[:cut_index]
+                self.buffer = self.buffer[cut_index:]
+            else:
+                # No sentence boundary found yet
+                # If buffer is getting HUGE (> 2000 chars), force a cut to avoid stuck buffer
+                if len(self.buffer) > 2000:
+                   to_refine = self.buffer
+                   self.buffer = ""
+                else:
+                    # Wait for more text to form a sentence
+                    return
+        
+        if not to_refine.strip():
+            return
             
         self.is_refining = True
-        
-        # Capture current buffer and clear it
-        to_refine = self.buffer
-        self.buffer = ""
         
         try:
             # Shift count for this "thought task"
