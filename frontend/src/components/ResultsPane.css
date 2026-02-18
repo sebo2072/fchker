@@ -1,0 +1,52 @@
+/* ResultsPane.css */
+.results-pane {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    /* No padding here, handled by pane-body */
+}
+
+.results-count-header {
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--color-primary);
+    padding-bottom: 16px;
+    margin-bottom: 16px;
+    border-bottom: 1px solid var(--color-border-soft);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.results-list {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    overflow-y: auto;
+    padding-bottom: 20px;
+}
+
+.empty-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 300px;
+    color: var(--color-text-muted);
+    font-size: 0.9rem;
+    opacity: 0.8;
+}
+
+/* Scrollbar refinement for results list */
+.results-list::-webkit-scrollbar {
+    width: 6px;
+}
+
+.results-list::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.results-list::-webkit-scrollbar-thumb {
+    background: var(--color-border);
+    border-radius: 3px;
+}

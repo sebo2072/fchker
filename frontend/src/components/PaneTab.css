@@ -1,0 +1,60 @@
+/* Shared across all pane tabs */
+.pane-tab {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 20px;
+    background: var(--color-accent-soft);
+    border: 1px solid var(--color-border);
+    border-bottom: none;
+    border-radius: var(--pane-border-radius) var(--pane-border-radius) 0 0;
+    cursor: pointer;
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--color-text-secondary);
+    user-select: none;
+    transition: background 0.2s, color 0.2s;
+    width: fit-content;
+    min-width: 140px;
+}
+
+.pane-tab.active {
+    background: var(--color-bg-pane);
+    color: var(--color-primary);
+    border-color: var(--color-border);
+    box-shadow: 0 -2px 8px rgba(76, 29, 149, 0.06);
+}
+
+.pane-tab:hover:not(.active) {
+    background: #f3f0ff;
+    color: var(--color-primary-mid);
+}
+
+.pane-tab-badge {
+    font-size: 0.7rem;
+    background: var(--color-primary-light);
+    color: white;
+    padding: 1px 7px;
+    border-radius: 10px;
+}
+
+.pane-tab-dot {
+    /* Animated dot for active processing states */
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: var(--color-primary-light);
+    animation: pulse-dot 1.5s infinite;
+}
+
+@keyframes pulse-dot {
+
+    0%,
+    100% {
+        opacity: 1;
+    }
+
+    50% {
+        opacity: 0.3;
+    }
+}

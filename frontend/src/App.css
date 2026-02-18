@@ -1,0 +1,192 @@
+.app {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    /* Prevent body scroll, use panes */
+    background: #fdfdfd;
+}
+
+.main-container {
+    flex: 1;
+    position: relative;
+    width: 100%;
+    overflow: hidden;
+}
+
+/* Dashboard Cascading Layout */
+.dashboard {
+    position: relative;
+    width: 100%;
+    height: calc(100vh - 64px);
+    overflow: hidden;
+}
+
+.left-pane,
+.middle-pane,
+.right-pane {
+    position: absolute;
+    top: 24px;
+    bottom: 24px;
+    background: white;
+    border: 1px solid var(--border-color);
+    box-shadow: var(--shadow-lg);
+    transition: all 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+    overflow-y: auto;
+    cursor: default;
+    z-index: 1;
+}
+
+/* Layer Stacking & Focus Logic */
+
+/* Stage A: Input Focus (Majority Width) */
+.focus-input .left-pane {
+    left: 24px;
+    right: 48px;
+    z-index: 30;
+}
+
+.focus-input .middle-pane {
+    left: calc(100% - 32px);
+    width: 400px;
+    opacity: 0.2;
+    z-index: 20;
+}
+
+.focus-input .right-pane {
+    left: calc(100% - 16px);
+    width: 400px;
+    opacity: 0.1;
+    z-index: 10;
+}
+
+/* Stage B: Thinking Focus */
+.focus-thinking .left-pane {
+    left: 24px;
+    width: 60px;
+    /* Peek width */
+    overflow: hidden;
+    z-index: 10;
+    opacity: 0.6;
+    cursor: pointer;
+}
+
+.focus-thinking .middle-pane {
+    left: 108px;
+    right: 48px;
+    z-index: 30;
+    box-shadow: -20px 0 30px rgba(0, 0, 0, 0.05);
+}
+
+.focus-thinking .right-pane {
+    left: calc(100% - 32px);
+    width: 400px;
+    z-index: 20;
+    opacity: 0.2;
+}
+
+/* Stage C: Results Focus */
+.focus-results .left-pane {
+    left: 24px;
+    width: 40px;
+    z-index: 10;
+    opacity: 0.4;
+    cursor: pointer;
+}
+
+.focus-results .middle-pane {
+    left: 84px;
+    width: 60px;
+    z-index: 20;
+    opacity: 0.6;
+    cursor: pointer;
+    overflow: hidden;
+}
+
+.focus-results .right-pane {
+    left: 168px;
+    right: 24px;
+    z-index: 30;
+    box-shadow: -20px 0 40px rgba(0, 0, 0, 0.1);
+}
+
+/* Interactive Sliders (Clicking tucked layers) */
+.left-pane:hover,
+.middle-pane:hover,
+.right-pane:hover {
+    box-shadow: var(--shadow-md);
+}
+
+.pane-title {
+    font-size: 0.8rem;
+    font-weight: 800;
+    margin-bottom: 24px;
+    color: #111827;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+}
+
+.pane-title-icon {
+    display: none;
+    /* Removed as per user request (no emojis/childish icons) */
+}
+
+/* Resets for Cascading */
+.left-pane,
+.middle-pane,
+.right-pane {
+    padding: 32px;
+}
+
+/* Transitions for sub-elements */
+.left-pane *,
+.middle-pane *,
+.right-pane * {
+    transition: opacity 0.3s;
+}
+
+.focus-thinking .left-pane *,
+.focus-results .left-pane *,
+.focus-results .middle-pane * {
+    opacity: 0;
+    pointer-events: none;
+}
+
+/* Scrollbar reset for tucked panes */
+.focus-thinking .left-pane::-webkit-scrollbar,
+.focus-results .left-pane::-webkit-scrollbar,
+.focus-results .middle-pane::-webkit-scrollbar {
+    display: none;
+}
+
+/* Overlay + Backdrop for Confirmation Modal */
+.confirmation-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 500;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.confirmation-backdrop {
+    position: absolute;
+    inset: 0;
+    background: rgba(46, 16, 101, 0.35);
+    /* dark violet tint */
+    backdrop-filter: blur(3px);
+    animation: fade-in 0.3s ease-out;
+}
+
+@keyframes fade-in {
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
+}

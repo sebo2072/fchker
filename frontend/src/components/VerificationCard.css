@@ -1,0 +1,205 @@
+/* VerificationCard.css */
+.verification-card {
+    background: var(--color-bg-card);
+    border: 1px solid var(--color-border-soft);
+    box-shadow: var(--shadow-card);
+    transition: all 0.2s ease;
+    border-radius: 6px !important;
+    overflow: hidden;
+    margin-bottom: 4px;
+}
+
+.verification-card:hover {
+    box-shadow: 0 4px 12px rgba(76, 29, 149, 0.1);
+    border-color: var(--color-border);
+    transform: translateY(-1px);
+}
+
+.card-header {
+    display: flex;
+    align-items: flex-start;
+    padding: 20px;
+    cursor: pointer;
+    gap: 16px;
+    position: relative;
+    background: white;
+}
+
+.card-indicator {
+    width: 4px;
+    height: 100%;
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+}
+
+.verified .card-indicator {
+    background: var(--color-success);
+}
+
+.partially-verified .card-indicator {
+    background: var(--color-warning);
+}
+
+.false .card-indicator {
+    background: var(--color-error);
+}
+
+.unverified .card-indicator {
+    background: var(--color-text-muted);
+}
+
+.card-title-section {
+    flex-grow: 1;
+}
+
+.card-claim {
+    font-size: 0.95rem;
+    font-weight: 500;
+    color: var(--color-text-primary);
+    margin-bottom: 8px;
+    line-height: 1.5;
+}
+
+.card-meta {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+}
+
+.status-label {
+    font-size: 0.72rem;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    padding: 2px 8px;
+    border-radius: 10px;
+}
+
+.verified .status-label {
+    background: #d1fae5;
+    color: #065f46;
+}
+
+.partially-verified .status-label {
+    background: #fef3c7;
+    color: #92400e;
+}
+
+.false .status-label {
+    background: #fee2e2;
+    color: #991b1b;
+}
+
+.confidence-label {
+    font-size: 0.7rem;
+    font-weight: 600;
+    color: var(--color-text-muted);
+}
+
+.expand-toggle {
+    background: transparent;
+    color: var(--color-primary-light);
+    font-size: 0.75rem;
+    font-weight: 600;
+    padding: 4px 10px;
+    border: 1px solid var(--color-border);
+    border-radius: 4px;
+    transition: all 0.2s;
+}
+
+.expand-toggle:hover {
+    border-color: var(--color-primary);
+    color: var(--color-primary);
+    background: var(--color-accent-soft);
+}
+
+.card-body {
+    padding: 0 24px 24px 44px;
+    /* indented to align with text */
+    border-top: 1px solid var(--color-border-soft);
+    background: #fafafc;
+}
+
+.card-section {
+    margin-top: 20px;
+}
+
+.section-label {
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: var(--color-text-secondary);
+    margin-bottom: 8px;
+    /* No uppercase transform per brief */
+}
+
+.section-text {
+    font-size: 0.9rem;
+    color: var(--color-text-primary);
+    line-height: 1.6;
+}
+
+.findings-list {
+    list-style: none;
+    padding: 0;
+}
+
+.findings-list li {
+    font-size: 0.9rem;
+    color: var(--color-text-primary);
+    padding: 8px 0;
+    border-bottom: 1px solid var(--color-border-soft);
+    display: flex;
+    gap: 12px;
+    line-height: 1.5;
+}
+
+.findings-list li:last-child {
+    border-bottom: none;
+}
+
+.findings-list li::before {
+    content: "•";
+    color: var(--color-primary-light);
+    font-weight: bold;
+}
+
+.sources-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 12px;
+    margin-top: 12px;
+}
+
+.source-card {
+    background: white;
+    border: 1px solid var(--color-border);
+    padding: 12px;
+    text-decoration: none;
+    transition: all 0.2s ease;
+    border-radius: 4px;
+}
+
+.source-card:hover {
+    border-color: var(--color-primary);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.source-title {
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--color-primary-mid);
+    margin-bottom: 4px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.source-url {
+    font-size: 0.7rem;
+    color: var(--color-text-muted);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}

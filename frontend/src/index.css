@@ -1,0 +1,165 @@
+:root {
+  /* Brand colors */
+  --color-primary: #4c1d95;
+  /* deep violet */
+  --color-primary-mid: #6d28d9;
+  /* violet */
+  --color-primary-light: #8b5cf6;
+  /* medium violet */
+  --color-accent: #a78bfa;
+  /* lavender accent */
+  --color-accent-soft: #ede9fe;
+  /* lightest lavender — pane backgrounds */
+
+  /* Gradients */
+  --gradient-header: linear-gradient(135deg, #2e1065 0%, #4c1d95 50%, #6d28d9 100%);
+  --gradient-pane-border: linear-gradient(180deg, #a78bfa 0%, #ddd6fe 100%);
+
+  /* Surfaces */
+  --color-bg-app: #f5f5f7;
+  /* light gray app background */
+  --color-bg-pane: #faf9ff;
+  /* near-white with lavender tint */
+  --color-bg-card: #ffffff;
+  --color-border: #ddd6fe;
+  /* lavender border */
+  --color-border-soft: #ede9fe;
+
+  /* Text */
+  --color-text-primary: #1e1b4b;
+  /* deep indigo */
+  --color-text-secondary: #6d6a8a;
+  --color-text-muted: #a9a7c0;
+
+  /* Semantic */
+  --color-success: #059669;
+  --color-error: #dc2626;
+  --color-warning: #d97706;
+
+  /* Typography */
+  --font-primary: 'Roboto', 'Inter', system-ui, sans-serif;
+  --font-mono: 'Roboto Mono', 'Fira Code', monospace;
+
+  /* Shadows */
+  --shadow-pane: 0 4px 24px rgba(76, 29, 149, 0.08), 0 1px 4px rgba(76, 29, 149, 0.04);
+  --shadow-card: 0 2px 12px rgba(76, 29, 149, 0.06);
+
+  /* Spacing & layout */
+  --workspace-max-width: 960px;
+  --workspace-side-margin: 20%;
+  /* 20% each side = 60% canvas */
+  --pane-border-radius: 6px;
+  --header-height: 64px;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  font-family: var(--font-primary);
+  background: var(--color-bg-app);
+  color: var(--color-text-primary);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* App shell CSS */
+.app-shell {
+  min-height: 100vh;
+  background: var(--color-bg-app);
+  display: flex;
+  flex-direction: column;
+}
+
+.workspace {
+  flex: 1;
+  width: 60%;
+  /* 60% canvas width */
+  margin: 0 auto;
+  /* centered = 20% margins each side */
+  padding: 32px 0 64px;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  /* panes stack directly, no gap — tabs overlap */
+}
+
+.app-footer {
+  text-align: center;
+  padding: 20px;
+  font-size: 0.75rem;
+  color: var(--color-text-muted);
+  border-top: 1px solid var(--color-border-soft);
+  background: var(--color-bg-app);
+}
+
+@media (max-width: 1200px) {
+  .workspace {
+    width: 80%;
+  }
+}
+
+@media (max-width: 768px) {
+  .workspace {
+    width: 95%;
+    padding: 16px 0;
+  }
+}
+
+/* Common Pane Tab Row container */
+.pane-tab-row {
+  display: flex;
+  align-items: flex-end;
+  gap: 4px;
+  padding-bottom: 0;
+  /* Sits flush above the pane body border */
+}
+
+/* Common Pane Body Styles */
+.pane-body {
+  background: var(--color-bg-pane);
+  border: 1px solid var(--color-border);
+  border-radius: 0 var(--pane-border-radius) var(--pane-border-radius) var(--pane-border-radius);
+  box-shadow: var(--shadow-pane);
+  padding: 28px 32px;
+  min-height: 320px;
+
+  /* Layout constraint for scrolling panes */
+  max-height: calc(100vh - 160px);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+
+  /* Entry animation */
+  animation: slide-in-from-right 0.35s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@keyframes slide-in-from-right {
+  from {
+    opacity: 0;
+    transform: translateX(48px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+/* Utility to hide pane without unmounting */
+.pane-hidden {
+  display: none !important;
+}
+
+/* Background panes visible but dimmed */
+.pane-body.background {
+  opacity: 0.55;
+  pointer-events: auto;
+  /* clickable — clicking switches focus */
+  filter: blur(0.5px);
+  transition: opacity 0.25s, filter 0.25s;
+}
+
+.pane-body.background:hover {
+  opacity: 0.75;
+  filter: none;
+}
