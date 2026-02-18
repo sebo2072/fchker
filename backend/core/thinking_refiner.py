@@ -19,7 +19,7 @@ class ThinkingRefiner:
         self.claim_id = claim_id
         self.progress_callback = progress_callback
         self.buffer = ""
-        self.buffer_limit = 500
+        self.buffer_limit = 1000
         self.is_refining = False
         self.lock = asyncio.Lock()
         self.phase_counter = 1
@@ -40,8 +40,9 @@ class ThinkingRefiner:
         """Final refinement of remaining buffer and wait for tasks."""
         async with self.lock:
             if self.buffer:
-                # For flush, we process whatever is left
-                await self._trigger_refinement(force=True)
+                # For flush, we process whatever is left.
+                # key fix: Call internal method without re-acquiring lock
+                await self._refine_buffer(force=True)
             
             # Wait for any pending background tasks
             if self.refinement_tasks:
@@ -49,28 +50,24 @@ class ThinkingRefiner:
                 if pending:
                     await asyncio.wait(pending, timeout=10) # 10s safety timeout
 
-    async def _trigger_refinement(self, force: bool = False):
-        """Send buffer to fast agent for streaming narrative refinement."""
+    async def _trigger_refinement(self):
+        """Wrapper for background refinement task with locking."""
+        async with self.lock:
+            await self._refine_buffer(force=False)
+
+    async def _refine_buffer(self, force: bool = False):
+        """Internal refinement logic. Assumes caller holds the lock."""
+        # Note: No 'async with self.lock' here as caller handles it
         if not self.buffer:
             return
 
         to_refine = ""
         
         if force:
-            # Take everything
             to_refine = self.buffer
             self.buffer = ""
         else:
-            # Intelligent chunking: find last sentence boundary
-            # Look for . ! ? followed by space or end of string
-            # We want the *last* valid split point to maximize chunk size
-            # but keep it roughly within reason
-            
-            # Regex for sentence ending: [.!?] followed by whitespace
             import re
-            
-            # Search for sentence endings
-            # We simply want to cut at the last punctuation mark that makes sense
             matches = list(re.finditer(r'[.!?]\s', self.buffer))
             
             if matches:
@@ -79,13 +76,10 @@ class ThinkingRefiner:
                 to_refine = self.buffer[:cut_index]
                 self.buffer = self.buffer[cut_index:]
             else:
-                # No sentence boundary found yet
-                # If buffer is getting HUGE (> 2000 chars), force a cut to avoid stuck buffer
                 if len(self.buffer) > 2000:
                    to_refine = self.buffer
                    self.buffer = ""
                 else:
-                    # Wait for more text to form a sentence
                     return
         
         if not to_refine.strip():
@@ -94,19 +88,23 @@ class ThinkingRefiner:
         self.is_refining = True
         
         try:
-            # Shift count for this "thought task"
             task_id = self.phase_counter
             self.phase_counter += 1
             
             # Narrative Refinement Prompt
-            prompt = f"""You are a professional technical analyst and fact-checker. 
-            Refine the following raw AI thinking process into a single, cohesive, professional narrative paragraph.
+            # Narrative Refinement Prompt
+            prompt = f"""You are a senior editor and fact-checker analyzing a document. 
+            Synthesize the following raw thought process into a single, cohesive, professional narrative paragraph.
             
             Guidelines:
             - Output ONLY one logical paragraph.
-            - Do NOT use bullet points, headers, or "Action/Headline" labels.
-            - Focus on the intellectual progress: what is being searched, compared, or validated.
-            - Maintain a technical, active voice like Claude or Antigravity.
+            - FOCUS STRICTLY on the *intellectual analysis* of the content:
+              * Which specific statements are being isolated for verification?
+              * Why are these claims worth checking? (Subjective/Objective split)
+              * How verifiable does the evidence seem so far?
+            - DO NOT mention technical details like JSON, schemas, data fields (is_quote, confidence), or parsing logic.
+            - DO NOT mention "formatting" or "structuring the output".
+            - Maintain a professional, active voice.
             
             Raw Thinking to Synthesize:
             \"\"\"{to_refine}\"\"\"
@@ -135,7 +133,8 @@ class ThinkingRefiner:
                 "phase": f"PHASE {task_id}",
                 "message": full_refined_paragraph,
                 "is_refined": True,
-                "is_streaming_complete": True
+                "is_streaming_complete": True,
+                "is_final_thinking": force # If force, it means this is the end of flush
             })
             
         except Exception as e:

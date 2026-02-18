@@ -65,6 +65,7 @@ IMPORTANT:
             all_thoughts = ""
             max_tokens = 8192
             
+            chunk_count = 0
             async for chunk in self.vertex_client.generate_streaming(
                 prompt=prompt,
                 temperature=0.1,
@@ -72,21 +73,23 @@ IMPORTANT:
                 use_grounding=False,
                 extra_config={"response_mime_type": "application/json"}
             ):
+                chunk_count += 1
                 if chunk['type'] == 'thought':
+                    logger.debug(f"Extraction chunk {chunk_count}: Received thought ({len(chunk['text'])} chars)")
                     all_thoughts += chunk['text']
                     # Route thoughts through refiner if available
                     if refiner:
                         await refiner.add_raw_thought(chunk['text'])
-                    # Fallback logic removed: frontend filters native thoughts anyway
                     
                 if chunk['type'] == 'text':
+                    logger.debug(f"Extraction chunk {chunk_count}: Received text content ({len(chunk['text'])} chars)")
                     full_text += chunk['text']
             
-            # Flush refiner at end (Non-blocking)
+            logger.info(f"Extraction streaming loop finished after {chunk_count} chunks. full_text_len={len(full_text)}")
+            
+            # Flush refiner at end
             if refiner:
-                 # Non-blocking flush ensures claims are returned immediately.
-                 # Frontend waits for "is_streaming_complete" signal from the refiner.
-                 asyncio.create_task(refiner.flush())
+                 await refiner.flush()
             
             # Combine text and thoughts for extraction search if text is empty
             # Sometimes models put the results in the wrong part

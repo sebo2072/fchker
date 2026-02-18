@@ -13,6 +13,7 @@ export interface ThinkingUpdate {
     is_delta?: boolean;
     is_streaming_complete?: boolean;
     isDisplayComplete?: boolean; // New: Flag to track when frontend typewriter finishes
+    is_final_thinking?: boolean; // New: Flag for synchronization
     result?: VerificationResult;
 }
 

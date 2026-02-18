@@ -96,7 +96,7 @@ class VertexAIClient:
             logger.error(f"Failed to initialize Gen AI Client: {e}")
             raise
     
-    @with_retry(max_retries=3, base_delay=2.0)
+    @with_retry(max_retries=5, base_delay=5.0)
     async def generate_with_grounding(
         self,
         prompt: str,
@@ -131,11 +131,13 @@ class VertexAIClient:
             
         config = types.GenerateContentConfig(**config_params)
         
+        target_model = model_name or self.model_name
+        logger.info(f"Generating content with model: {target_model} (grounding={use_grounding})")
+        
         try:
-            # Generate content - use a thread for the synchronous SDK call
-            response = await asyncio.to_thread(
-                self.client.models.generate_content,
-                model=model_name or self.model_name,
+            # Generate content using native async client
+            response = await self.client.aio.models.generate_content(
+                model=target_model,
                 contents=prompt,
                 config=config
             )
@@ -179,13 +181,14 @@ class VertexAIClient:
                                 result["citations"].append(citation)
                                 result["grounding_metadata"]["grounding_attributions"].append(citation)
             
+            logger.info(f"Successfully generated response: text_len={len(result['text'])}, thought_len={len(result['thought'])}, citations={len(result['citations'])}")
             return result
             
         except Exception as e:
             logger.error(f"Error generating content: {e}")
             raise
     
-    @with_retry(max_retries=3, base_delay=2.0)
+    @with_retry(max_retries=5, base_delay=5.0)
     async def generate_streaming(
         self,
         prompt: str,
@@ -219,20 +222,23 @@ class VertexAIClient:
             
         config = types.GenerateContentConfig(**config_params)
         
+        logger.info(f"Starting streaming generation: model={self.model_name}, grounding={use_grounding}")
+        
         try:
-            # The google-genai SDK models.generate_content_stream is a synchronous iterator.
-            def get_stream():
-                return self.client.models.generate_content_stream(
-                    model=self.model_name,
-                    contents=prompt,
-                    config=config
-                )
+            # Use the native async streaming interface
+            stream = await self.client.aio.models.generate_content_stream(
+                model=self.model_name,
+                contents=prompt,
+                config=config
+            )
             
-            stream = await asyncio.to_thread(get_stream)
-            
-            # For streaming responses, we iterate over segments
-            for block in stream:
+            chunk_count = 0
+            # For streaming responses, we iterate over segments using async iterator
+            async for block in stream:
+                chunk_count += 1
+                logger.debug(f"Raw stream block {chunk_count}: {getattr(block, '__dict__', block)}")
                 if not block.candidates:
+                    logger.debug(f"Stream block {chunk_count} has no candidates")
                     continue
                     
                 candidate = block.candidates[0]
@@ -241,8 +247,10 @@ class VertexAIClient:
                 if candidate.content and candidate.content.parts:
                     for part in candidate.content.parts:
                         if part.thought:
+                            logger.debug(f"Stream block {chunk_count}: yielding thought ({len(part.text)} chars)")
                             yield {"type": "thought", "text": part.text}
                         elif part.text:
+                            logger.debug(f"Stream block {chunk_count}: yielding text ({len(part.text)} chars)")
                             yield {"type": "text", "text": part.text}
                 
                 # Extract grounding metadata if present
@@ -257,7 +265,10 @@ class VertexAIClient:
                                     "uri": chunk_data.web.uri
                                 })
                     if citations:
+                        logger.debug(f"Stream block {chunk_count}: yielding {len(citations)} citations")
                         yield {"type": "citations", "data": citations}
+            
+            logger.info(f"Streaming generation completed successfully after {chunk_count} blocks")
                         
         except Exception as e:
             logger.error(f"Error in streaming generation: {e}")

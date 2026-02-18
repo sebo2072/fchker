@@ -19,7 +19,7 @@ class Settings(BaseSettings):
     
     # GCP Configuration
     gcp_project_id: str = Field(default="", env="GCP_PROJECT_ID")
-    gcp_location: str = Field(default="us-central1", env="GCP_LOCATION")
+    gcp_location: str = Field(default="global", env="GCP_LOCATION")
     google_application_credentials: str = Field(
         default=str(BASE_DIR / "key" / "service-account-key.json"),
         env="GOOGLE_APPLICATION_CREDENTIALS"
@@ -41,7 +41,7 @@ class Settings(BaseSettings):
     
     # OpenAI Configuration (for fast refinement)
     openai_api_key: str = Field(default="", env="OPENAI_API_KEY")
-    openai_refiner_model: str = Field(default="gpt-5-nano", env="OPENAI_REFINER_MODEL")
+    openai_refiner_model: str = Field(default="gpt-4o-mini", env="OPENAI_REFINER_MODEL")
     
     # API Configuration
     api_host: str = Field(default="0.0.0.0", env="API_HOST")

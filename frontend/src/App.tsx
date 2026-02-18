@@ -124,7 +124,7 @@ function App() {
         // 1. Sync Extraction -> Confirmation
         if (status === 'extracting') {
             const extractionThinking = thinkingUpdates.find(u =>
-                u.claim_id === 'extraction_thinking' && u.is_streaming_complete
+                u.claim_id === 'extraction_thinking' && u.is_final_thinking
             );
 
             if (extractionThinking?.isDisplayComplete && pendingClaimsRef.current) {
@@ -137,7 +137,7 @@ function App() {
         // 2. Sync Verification Result -> Display
         if (status === 'verifying' || status === 'completed') {
             thinkingUpdates.forEach(update => {
-                if (update.phase === 'completed' && update.isDisplayComplete) {
+                if (update.is_final_thinking && update.isDisplayComplete) {
                     const pendingResult = pendingResultsRef.current[update.claim_id];
                     if (pendingResult) {
                         addVerificationResult(pendingResult);
@@ -153,7 +153,7 @@ function App() {
 
             // Auto-complete if all verifications done and displayed
             const allThinkingFinished = thinkingUpdates.every(u =>
-                u.phase !== 'completed' || u.isDisplayComplete
+                !u.is_final_thinking || u.isDisplayComplete
             );
             const noPendingResults = Object.keys(pendingResultsRef.current).length === 0;
 

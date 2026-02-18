@@ -177,6 +177,7 @@ Format your response as follows:
                     "claim_id": claim_id,
                     "phase": "completed",
                     "message": f"Verification complete: {verification_result['status']}",
+                    "is_final_thinking": True,
                     "result": verification_result
                 })
             
