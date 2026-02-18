@@ -67,6 +67,30 @@
     box-shadow: 0 0 0 2px rgba(139, 92, 246, 0.2);
 }
 
+.node-spinner-container {
+    width: 14px;
+    height: 14px;
+    margin-top: 4px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 2;
+}
+
+.node-spinner {
+    width: 10px;
+    height: 10px;
+    border: 2px solid var(--color-primary-light);
+    border-top: 2px solid var(--color-primary);
+    border-radius: 50%;
+    animation: node-rotate 1s linear infinite;
+}
+
+@keyframes node-rotate {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+
 .node-line {
     width: 2px;
     flex-grow: 1;
@@ -114,9 +138,9 @@
 }
 
 .block-message {
-    font-size: 0.95rem;
+    font-size: 1.1rem;
     color: var(--color-text-primary);
-    line-height: 1.6;
+    line-height: 1.75;
     font-family: var(--font-primary);
 }
 

@@ -10,16 +10,32 @@ interface ThinkingBlockProps {
 }
 
 const ThinkingBlock: React.FC<ThinkingBlockProps> = ({ update, isLast }) => {
+    const { setThinkingDisplayComplete } = useAppStore();
     const { displayedText, isComplete } = useTypewriter(update.message, isLast ? 20 : 0);
+
+    // Sync completion to store with a 500ms delay as requested
+    useEffect(() => {
+        if (isComplete && !update.isDisplayComplete) {
+            const timer = setTimeout(() => {
+                setThinkingDisplayComplete(update.claim_id, update.phase);
+            }, 500);
+            return () => clearTimeout(timer);
+        }
+    }, [isComplete, update.claim_id, update.phase, update.isDisplayComplete, setThinkingDisplayComplete]);
 
     return (
         <div className={`thinking-block ${isLast ? 'active' : ''}`}>
             <div className="timeline-node">
-                <div className="node-dot"></div>
+                {isLast ? (
+                    <div className="node-spinner-container">
+                        <div className="node-spinner"></div>
+                    </div>
+                ) : (
+                    <div className="node-dot"></div>
+                )}
                 {!isLast && <div className="node-line"></div>}
             </div>
             <div className="block-content">
-                {/* Block header removed as per addendum to fix "Invalid Date" and unwanted phases */}
                 <div className="block-message">
                     {displayedText}
                     {!isComplete && isLast && <span className="blinking-cursor">_</span>}

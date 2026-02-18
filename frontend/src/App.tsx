@@ -28,6 +28,8 @@ function App() {
         verificationResults
     } = useAppStore();
 
+    // Initialization effect...
+
     // Initialize session on mount
     useEffect(() => {
         const initSession = async () => {
@@ -52,28 +54,32 @@ function App() {
         };
     }, []); // Empty dependency array for one-time initialization
 
+    // Refs for synchronization
+    const pendingClaimsRef = React.useRef<any[] | null>(null);
+    const pendingResultsRef = React.useRef<{ [claimId: string]: any }>({});
+    const { thinkingUpdates, setThinkingDisplayComplete } = useAppStore();
+
     // Handle WebSocket messages
     useEffect(() => {
         const handleMessage = (message: WebSocketMessage) => {
             switch (message.type) {
                 case 'thinking_update':
                     addThinkingUpdate(message.data);
-                    // Shift focus when thinking starts (Fix: use direct value, not function updater)
+                    // Shift focus when thinking starts
                     if (focusPane !== 'results') {
                         setFocusPane('thinking');
                     }
                     break;
 
                 case 'verification_result':
-                    addVerificationResult(message.data);
-                    // Shift focus when results start appearing
-                    setFocusPane('results');
+                    // Store in pending buffer
+                    pendingResultsRef.current[message.data.claim_id] = message.data;
                     break;
 
                 case 'claims_extracted':
+                    pendingClaimsRef.current = message.data.claims;
                     setExtractedClaims(message.data.claims);
-                    setStatus('awaiting_confirmation');
-                    setStatusMessage('Review and confirm claims');
+                    setStatusMessage('Finishing analysis...');
                     break;
 
                 case 'status':
@@ -84,8 +90,6 @@ function App() {
                         // Auto-shifting focus based on backend status
                         if (message.data.status === 'extracting' || message.data.status === 'verifying') {
                             setFocusPane('thinking');
-                        } else if (message.data.status === 'completed') {
-                            setFocusPane('results');
                         }
                     }
                     break;
@@ -107,12 +111,57 @@ function App() {
         };
     }, [
         addThinkingUpdate,
-        addVerificationResult,
         setExtractedClaims,
         setStatus,
         setStatusMessage,
         setError,
+        focusPane,
+        setFocusPane
     ]);
+
+    // Effect to monitor thinking display completion and trigger UI transitions
+    useEffect(() => {
+        // 1. Sync Extraction -> Confirmation
+        if (status === 'extracting') {
+            const extractionThinking = thinkingUpdates.find(u =>
+                u.claim_id === 'extraction_thinking' && u.is_streaming_complete
+            );
+
+            if (extractionThinking?.isDisplayComplete && pendingClaimsRef.current) {
+                setStatus('awaiting_confirmation');
+                setStatusMessage('Review and confirm claims');
+                pendingClaimsRef.current = null;
+            }
+        }
+
+        // 2. Sync Verification Result -> Display
+        if (status === 'verifying' || status === 'completed') {
+            thinkingUpdates.forEach(update => {
+                if (update.phase === 'completed' && update.isDisplayComplete) {
+                    const pendingResult = pendingResultsRef.current[update.claim_id];
+                    if (pendingResult) {
+                        addVerificationResult(pendingResult);
+                        delete pendingResultsRef.current[update.claim_id];
+
+                        // Shift focus when first result appears
+                        if (verificationResults.length === 0) {
+                            setFocusPane('results');
+                        }
+                    }
+                }
+            });
+
+            // Auto-complete if all verifications done and displayed
+            const allThinkingFinished = thinkingUpdates.every(u =>
+                u.phase !== 'completed' || u.isDisplayComplete
+            );
+            const noPendingResults = Object.keys(pendingResultsRef.current).length === 0;
+
+            if (status === 'completed' && allThinkingFinished && noPendingResults && focusPane !== 'results') {
+                setFocusPane('results');
+            }
+        }
+    }, [thinkingUpdates, status, setStatus, setStatusMessage, addVerificationResult, verificationResults.length, setFocusPane]);
 
     // Manual focus override
     const handlePaneClick = (pane: FocusPane) => {

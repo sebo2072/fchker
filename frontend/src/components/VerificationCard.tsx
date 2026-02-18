@@ -1,12 +1,26 @@
 import React, { useState } from 'react';
-import { VerificationResult } from '../services/ApiService';
+import { ValidationResult } from '../services/ApiService';
 import './VerificationCard.css';
 
-interface Props {
-    result: VerificationResult;
+interface VerificationCardProps {
+    result: ValidationResult;
 }
 
-const VerificationCard: React.FC<Props> = ({ result }) => {
+function renderWithBold(text: string): React.ReactNode {
+    if (!text) return null;
+    // Split on **bold** markers
+    const boldParts = text.split(/\*\*(.*?)\*\*/g);
+    return boldParts.map((part, i) => {
+        if (i % 2 === 1) return <strong key={`b${i}`}>{part}</strong>;
+        // Also handle single *italic*
+        const italicParts = part.split(/\*(.*?)\*/g);
+        return italicParts.map((ip, j) =>
+            j % 2 === 1 ? <em key={`i${i}-${j}`}>{ip}</em> : ip
+        );
+    });
+}
+
+const VerificationCard: React.FC<VerificationCardProps> = ({ result }) => {
     const [isExpanded, setIsExpanded] = useState(false);
 
     const getStatusColor = (status: string) => {
@@ -49,17 +63,17 @@ const VerificationCard: React.FC<Props> = ({ result }) => {
                 <div className="card-body">
                     {result.evidence_summary && (
                         <div className="card-section">
-                            <h4 className="section-label">Executive summary</h4>
-                            <p className="section-text">{result.evidence_summary}</p>
+                            <div className="section-label">EXECUTIVE SUMMARY</div>
+                            <p className="section-text">{renderWithBold(result.evidence_summary)}</p>
                         </div>
                     )}
 
                     {result.key_findings && result.key_findings.length > 0 && (
                         <div className="card-section">
-                            <h4 className="section-label">Critical findings</h4>
+                            <div className="section-label">KEY FINDINGS</div>
                             <ul className="findings-list">
                                 {result.key_findings.map((finding, index) => (
-                                    <li key={index}>{finding}</li>
+                                    <li key={index}>{renderWithBold(finding)}</li>
                                 ))}
                             </ul>
                         </div>
@@ -67,18 +81,18 @@ const VerificationCard: React.FC<Props> = ({ result }) => {
 
                     {result.sources && result.sources.length > 0 && (
                         <div className="card-section">
-                            <h4 className="section-label">Validated sources</h4>
-                            <div className="sources-grid">
+                            <div className="section-label">SOURCES</div>
+                            <div className="sources-list">
                                 {result.sources.map((source, index) => (
                                     <a
                                         key={index}
-                                        href={source.uri || '#'}
+                                        href={source.uri}
                                         target="_blank"
                                         rel="noopener noreferrer"
-                                        className="source-card"
+                                        className="source-item"
                                     >
                                         <div className="source-title">{source.title || 'Untitled Source'}</div>
-                                        <div className="source-url">{(source.uri || '').substring(0, 40)}...</div>
+                                        {/* URL removed as per FIX 2a */}
                                     </a>
                                 ))}
                             </div>

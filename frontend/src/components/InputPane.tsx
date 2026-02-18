@@ -26,6 +26,15 @@ const InputPane: React.FC = () => {
     const [isDragging, setIsDragging] = useState(false);
 
     const fileInputRef = useRef<HTMLInputElement>(null);
+    const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+    // Auto-resize effect for programmatic changes
+    React.useEffect(() => {
+        const el = textareaRef.current;
+        if (!el) return;
+        el.style.height = 'auto';
+        el.style.height = `${el.scrollHeight}px`;
+    }, [inputText]);
 
     const handleSubmit = async () => {
         if (!inputText.trim() || !sessionId) return;
@@ -207,6 +216,7 @@ const InputPane: React.FC = () => {
                     </div>
                 ) : (
                     <textarea
+                        ref={textareaRef}
                         className="input-textarea"
                         placeholder={
                             mode === 'single'
@@ -215,7 +225,11 @@ const InputPane: React.FC = () => {
                         }
                         value={inputText}
                         maxLength={mode === 'single' ? 100 : undefined}
-                        onChange={(e) => setInputText(e.target.value)}
+                        onChange={(e) => {
+                            setInputText(e.target.value);
+                            e.target.style.height = 'auto';
+                            e.target.style.height = `${e.target.scrollHeight}px`;
+                        }}
                         disabled={isProcessing}
                     />
                 )}

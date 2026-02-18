@@ -123,30 +123,37 @@
 }
 
 .card-section {
-    margin-top: 20px;
+    margin-bottom: 20px;
 }
 
+/* section-label: was 0.75rem -> 1.05rem (FIX 2b) */
 .section-label {
-    font-size: 0.75rem;
+    font-size: 1.05rem;
+    /* clearly larger than .section-text */
     font-weight: 700;
-    color: var(--color-text-secondary);
-    margin-bottom: 8px;
-    /* No uppercase transform per brief */
+    color: var(--color-text-primary);
+    margin-bottom: 10px;
+    letter-spacing: -0.1px;
+    text-transform: uppercase;
+    /* Ensure consistency if it was uppercase */
 }
 
+/* section-text: was 0.9rem -> 1.05rem (FIX 3) */
 .section-text {
-    font-size: 0.9rem;
-    color: var(--color-text-primary);
-    line-height: 1.6;
+    font-size: 1.05rem;
+    color: var(--color-text-secondary);
+    line-height: 1.65;
 }
 
 .findings-list {
     list-style: none;
     padding: 0;
+    margin: 0;
 }
 
+/* findings-list li: was 0.9rem -> 1.05rem (FIX 3) */
 .findings-list li {
-    font-size: 0.9rem;
+    font-size: 1.05rem;
     color: var(--color-text-primary);
     padding: 8px 0;
     border-bottom: 1px solid var(--color-border-soft);
@@ -161,40 +168,42 @@
 
 .findings-list li::before {
     content: "•";
-    color: var(--color-primary-light);
+    color: var(--color-primary);
     font-weight: bold;
 }
 
-.sources-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-    gap: 12px;
-    margin-top: 12px;
+.sources-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
 }
 
-.source-card {
-    background: white;
-    border: 1px solid var(--color-border);
+.source-item {
+    display: block;
     padding: 12px;
+    background: var(--color-bg-app);
+    border-radius: 6px;
     text-decoration: none;
-    transition: all 0.2s ease;
-    border-radius: 4px;
+    border: 1px solid transparent;
+    transition: all 0.2s;
 }
 
-.source-card:hover {
-    border-color: var(--color-primary);
+.source-item:hover {
+    background: white;
+    border-color: var(--color-primary-light);
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
 }
 
+/* source-title: was 0.8rem -> 0.95rem (FIX 3) */
 .source-title {
-    font-size: 0.8rem;
+    font-size: 0.95rem;
     font-weight: 600;
     color: var(--color-primary-mid);
-    margin-bottom: 4px;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
+    margin-bottom: 0;
+    /* No URL below it now */
 }
+
+/* .source-url removed as per FIX 2a */
 
 .source-url {
     font-size: 0.7rem;

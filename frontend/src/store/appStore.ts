@@ -12,6 +12,7 @@ export interface ThinkingUpdate {
     is_refined?: boolean;
     is_delta?: boolean;
     is_streaming_complete?: boolean;
+    isDisplayComplete?: boolean; // New: Flag to track when frontend typewriter finishes
     result?: VerificationResult;
 }
 
@@ -42,6 +43,7 @@ interface AppState {
     // Thinking updates
     thinkingUpdates: ThinkingUpdate[];
     addThinkingUpdate: (update: ThinkingUpdate) => void;
+    setThinkingDisplayComplete: (claimId: string, phase: string) => void;
     clearThinkingUpdates: () => void;
 
     // Results
@@ -138,6 +140,15 @@ export const useAppStore = create<AppState>((set, get) => ({
 
         // 3. Otherwise append as new entry
         set({ thinkingUpdates: [...thinkingUpdates, update] });
+    },
+    setThinkingDisplayComplete: (claimId, phase) => {
+        const { thinkingUpdates } = get();
+        const index = thinkingUpdates.findIndex(u => u.claim_id === claimId && u.phase === phase);
+        if (index !== -1) {
+            const newUpdates = [...thinkingUpdates];
+            newUpdates[index] = { ...newUpdates[index], isDisplayComplete: true };
+            set({ thinkingUpdates: newUpdates });
+        }
     },
     clearThinkingUpdates: () => set({ thinkingUpdates: [] }),
 
